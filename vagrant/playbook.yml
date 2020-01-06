@@ -1,0 +1,76 @@
+---
+- hosts: all
+  become: yes
+  user: vagrant
+  vars:
+    timezone: UTC
+    locale: en_US.UTF-8
+    elixir_path: /tmp/elixir
+  tasks:
+    - name: Set timezone to {{ timezone }}
+      timezone:
+        name: "{{ timezone }}"
+
+    - name: Selinux set permissive mode
+      selinux:
+        policy: targeted
+        state: permissive
+
+    - name: Set default locale
+      lineinfile: dest=/etc/locale.conf
+        regexp="LC_ALL"
+        line="LC_ALL=\"{{ locale }}\""
+
+    - name: Add Docker repository
+      shell: yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Download erlang repo
+      get_url:
+        url: https://packages.erlang-solutions.com/erlang-solutions-1.0-1.noarch.rpm
+        dest: /tmp/erlang-solutions-1.0-1.noarch.rpm
+        mode: '0440'
+
+    - name: Install repos
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - epel-release
+          - /tmp/erlang-solutions-1.0-1.noarch.rpm
+
+    - name: Install packages
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - wget
+          - docker-ce
+          - docker-compose
+          - git
+          - erlang
+
+    - name: Enable and start docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Clone Elixir lang git repo
+      git:
+        repo: 'https://github.com/elixir-lang/elixir.git'
+        dest: "{{ elixir_path }}"
+        version: master
+
+    - name: Creating environment variable via file in /etc/profile.d
+      shell: echo "export PATH=\"$PATH:{{ elixir_path }}/bin/\"" > elixir.sh
+      args:
+        chdir: /etc/profile.d
+
+    - name: Compile Elixir
+      shell: |
+        cd {{ elixir_path }}
+        make clean test
+      args:
+        executable: /bin/bash
