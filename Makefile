@@ -1,6 +1,5 @@
 ROOT = $(shell pwd)
 
-.ONESHELL:
 build-in-vagrant:
 	$(shell rm -rf /tmp/ics)
 	$(shell cp -rp $(ROOT) /tmp/)
