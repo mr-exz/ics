@@ -1,3 +1,3 @@
-defmodule IcsWeb.PageView do
+defmodule IcsWeb.TestView do
   use IcsWeb, :view
 end

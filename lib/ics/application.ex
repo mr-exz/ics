@@ -11,7 +11,8 @@ defmodule Ics.Application do
       # Start the Ecto repository
       Ics.Repo,
       # Start the endpoint when the application starts
-      IcsWeb.Endpoint
+      IcsWeb.Endpoint,
+      Ics.Sender
       # Starts a worker by calling: Ics.Worker.start_link(arg)
       # {Ics.Worker, arg},
     ]
